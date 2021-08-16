@@ -34,6 +34,14 @@ namespace BlogSite.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(opt =>
+            {
+                opt.AddDefaultPolicy(x =>
+                {
+                    x.AllowAnyOrigin().AllowAnyHeader().AllowCredentials();
+                });
+                   
+            });
             var key = Encoding.ASCII.GetBytes(Settings.Secret);
             services.AddAuthentication(x =>
             {
@@ -51,19 +59,22 @@ namespace BlogSite.API
                     ValidateIssuer = false,
                     ValidateAudience = false
                 };
-
             });
 
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Blog API", Version = "v1" });
-
             });
             services.AddDbContext<BlogContext>();
-            services.AddTransient<IUserRepository, UserRepository>();
-            services.AddTransient<IUserService, UserService>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IArticleRepository, ArticleRepository>();
+            services.AddScoped<IArticleService, ArticleService>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
+            services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
             services.AddControllers();
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -85,7 +96,8 @@ namespace BlogSite.API
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
-
+            app.UseCors();
+            app.UseStaticFiles();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
